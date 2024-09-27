@@ -10,8 +10,8 @@ const Header = () => {
         <div className="flex justify-center whitespace-nowrap space-x-2 text-xl lg:space-x-4 lg:text-2xl">
           <h2>당신의 이야기를 들려주세요!</h2>
           <div className="relative">
-            <div className="bg-purple-500 -rotate-1">
-              <p className="relative text-white">To life!</p>
+            <div className="bg-purple-500 -rotate-3">
+              <p className="relative text-white px-2">To life!</p>
             </div>
           </div>
         </div>
