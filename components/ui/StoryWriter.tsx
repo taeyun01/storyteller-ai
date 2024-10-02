@@ -13,6 +13,28 @@ const StoryWriter = () => {
   const [runFinished, setRunFinished] = useState<boolean | null>(null);
   const [currentTool, setCurrentTool] = useState("");
 
+  const handleStream = async (
+    reader: ReadableStreamReader<Uint8Array>,
+    decoder: TextDecoder
+  ) => {
+    // Manage the stream from the API
+    while (true) {
+      const { done, value } = await reader.read();
+
+      if (done) break; // breaks out of the infinite loop
+
+      const chunk = decoder.decode(value, { stream: true });
+
+      // 청크를 event 키워드로 분할하여 이벤트로 분할합니다
+      const eventData = chunk
+        .split("\n\n")
+        .filter((line) => line.startsWith("event: "))
+        .map((line) => line.replace(/^event: /, ""));
+
+      console.log(eventData);
+    }
+  };
+
   const runScript = async () => {
     setRunStarted(true);
     setRunFinished(false);
@@ -28,6 +50,12 @@ const StoryWriter = () => {
     if (response.ok && response.body) {
       // Handle streams from the API (API에서 스트림 처리)
       // ...
+      console.log("스트리밍 시작!!");
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+
+      handleStream(reader, decoder);
     }
 
     // 스트리밍 실패 시
