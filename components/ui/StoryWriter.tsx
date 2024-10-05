@@ -1,5 +1,6 @@
 "use client";
 
+import { Frame } from "@gptscript-ai/gptscript";
 import { useState } from "react";
 
 const storiesPath = "public/stories";
@@ -12,12 +13,13 @@ const StoryWriter = () => {
   const [runStarted, setRunStarted] = useState<boolean>(false);
   const [runFinished, setRunFinished] = useState<boolean | null>(null);
   const [currentTool, setCurrentTool] = useState("");
+  const [events, setEvents] = useState<Frame[]>([]);
 
   const handleStream = async (
     reader: ReadableStreamReader<Uint8Array>,
     decoder: TextDecoder
   ) => {
-    // Manage the stream from the API
+    // API에서 스트림 관리
     while (true) {
       const { done, value } = await reader.read();
 
@@ -32,6 +34,29 @@ const StoryWriter = () => {
         .map((line) => line.replace(/^event: /, ""));
 
       console.log(eventData);
+
+      eventData.forEach((event) => {
+        try {
+          const parsedData = JSON.parse(event);
+          console.log(parsedData); // 콘솔로 확인하여 43번줄 해석
+
+          if (parsedData.type === "callProgress") {
+            setProgress(
+              parsedData.output[parsedData.output.length - 1].content
+            );
+            setCurrentTool(parsedData.tool?.description || "");
+          } else if (parsedData.type === "callStart") {
+            setCurrentTool(parsedData.tool?.description || "");
+          } else if (parsedData.type === "runFinish") {
+            setRunFinished(true);
+            setRunStarted(false);
+          } else {
+            setEvents((prev) => [...prev, parsedData]);
+          }
+        } catch (error) {
+          console.error("Error parsing event data:", error);
+        }
+      });
     }
   };
 
